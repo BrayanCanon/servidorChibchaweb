@@ -1,0 +1,150 @@
+CREATE TABLE USUARIO(
+cedula INTEGER PRIMARY KEY,
+correo VARCHAR(30),
+nombre VARCHAR(30),
+contrasenia VARCHAR(30),
+cod_t_usuario INTEGER);
+
+CREATE TABLE T_USUARIO(
+cod_t_usuario INTEGER PRIMARY KEY,
+nom_t_usuario VARCHAR(30));
+
+CREATE TABLE EMPLEADO(
+cedula INTEGER PRIMARY KEY,
+cod_t_empleado INTEGER
+);
+
+ALTER TABLE USUARIO ADD CONSTRAINT fk_cod_t_usuario FOREIGN KEY (cod_t_usuario) REFERENCES T_USUARIO(cod_t_usuario);
+
+CREATE TABLE T_EMPLEADO(
+cod_t_empleado INTEGER PRIMARY KEY,
+nom_t_empleado varchar(30));
+
+ALTER TABLE EMPLEADO ADD CONSTRAINT fk_cod_t_empleado FOREIGN KEY (cod_t_empleado) REFERENCES T_EMPLEADO(cod_t_empleado);
+ALTER TABLE EMPLEADO ADD CONSTRAINT fk_cedula1 FOREIGN KEY (cedula) REFERENCES USUARIO(cedula);
+
+
+CREATE TABLE ADMINISTRADOR(
+cedula INTEGER PRIMARY KEY);
+
+ALTER TABLE ADMINISTRADOR ADD CONSTRAINT fk_cedula2 FOREIGN KEY (cedula) REFERENCES USUARIO(cedula);
+
+CREATE TABLE MODOPAGO(
+cod_m_pago INTEGER PRIMARY KEY,
+nom_m_pago VARCHAR(30));
+
+CREATE TABLE PLANPAGO(
+cod_p_pago INTEGER PRIMARY KEY,
+nom_p_pago VARCHAR(30));
+
+CREATE TABLE PAQUETE(
+cod_paquete INTEGER PRIMARY KEY,
+nom_paquete VARCHAR(30),
+val_paquete INTEGER);
+
+CREATE TABLE CLIENTE(
+cedula INTEGER PRIMARY KEY,
+tarjeta INTEGER,
+cod_p_pago INTEGER,
+cod_paquete INTEGER,
+cod_m_pago INTEGER);
+
+ALTER TABLE CLIENTE ADD CONSTRAINT fk_cod_m_pago FOREIGN KEY (cod_m_pago) REFERENCES MODOPAGO(cod_m_pago);
+
+ALTER TABLE CLIENTE ADD CONSTRAINT fk_cod_p_pago FOREIGN KEY (cod_p_pago) REFERENCES PLANPAGO(cod_p_pago);
+
+ALTER TABLE CLIENTE ADD CONSTRAINT fk_cod_paquete FOREIGN KEY (cod_paquete) REFERENCES PAQUETE(cod_paquete);
+
+ALTER TABLE CLIENTE ADD CONSTRAINT fk_cedula4 FOREIGN KEY (cedula) REFERENCES USUARIO(cedula);
+
+
+CREATE TABLE ESTADO(
+cod_estado INTEGER PRIMARY KEY,
+nom_estado VARCHAR(30));
+
+CREATE TABLE T_TICKET(
+cod_t_ticket INTEGER PRIMARY KEY,
+nom_t_usuario VARCHAR(50));
+
+CREATE TABLE DOMINIO(
+cod_dominio INTEGER PRIMARY KEY,
+cedula INTEGER,
+nom_dominio VARCHAR(30));
+
+CREATE TABLE TICKET(
+cod_ticket INTEGER PRIMARY KEY,
+cod_t_ticket INTEGER,
+cod_dominio INTEGER,
+cod_estado INTEGER);
+
+ALTER TABLE DOMINIO ADD CONSTRAINT fk_cedula5 FOREIGN KEY (cedula) REFERENCES CLIENTE(cedula);
+
+ALTER TABLE TICKET ADD CONSTRAINT fk_cod_dominio FOREIGN KEY (cod_dominio) REFERENCES DOMINIO(cod_dominio);
+
+ALTER TABLE TICKET ADD CONSTRAINT fk_cod_t_ticket FOREIGN KEY (cod_t_ticket) REFERENCES T_TICKET(cod_t_ticket);
+
+ALTER TABLE TICKET ADD CONSTRAINT fk_cod_estado FOREIGN KEY (cod_estado) REFERENCES ESTADO(cod_estado);
+
+CREATE TABLE REGISTRADOR(
+cod_registrador INTEGER PRIMARY KEY,
+cod_pais INTEGER);
+
+CREATE TABLE PAIS(
+cod_pais INTEGER PRIMARY KEY,
+nom_pais VARCHAR(30));
+
+ALTER TABLE REGISTRADOR ADD CONSTRAINT fk_cod_pais FOREIGN KEY (cod_pais) REFERENCES PAIS(cod_pais);
+ALTER TABLE REGISTRADOR ADD CONSTRAINT fk_cedula6 FOREIGN KEY (cod_registrador) REFERENCES USUARIO(cedula);
+
+CREATE TABLE DISTRIBUIDOR(
+cedula INTEGER PRIMARY KEY,
+cod_t_distribuidor INTEGER);
+
+CREATE TABLE T_DISTRIBUIDOR(
+cod_t_distribuidor INTEGER PRIMARY KEY,
+nom_t_distribuidor VARCHAR(30),
+val_comision INTEGER);
+
+
+
+ALTER TABLE DISTRIBUIDOR ADD CONSTRAINT fk_cedula7 FOREIGN KEY (cedula) REFERENCES USUARIO (cedula);
+
+ALTER TABLE DISTRIBUIDOR ADD CONSTRAINT fk_cod_t_distribuidor FOREIGN KEY (cod_t_distribuidor) REFERENCES T_DISTRIBUIDOR(cod_t_distribuidor);
+
+
+DELIMITER $$
+CREATE TRIGGER al_crear_usuario
+AFTER INSERT
+ON USUARIO FOR EACH ROW
+BEGIN
+	IF (NEW.cod_t_usuario = 2) THEN
+    	INSERT INTO CLIENTE(cedula) VALUES (NEW.cedula);
+    ELSEIF (NEW.cod_t_usuario = 3) THEN
+    	INSERT INTO REGISTRADOR(cod_registrador) VALUES (NEW.cedula);
+    ELSEIF (NEW.cod_t_usuario = 4) THEN
+    	INSERT INTO EMPLEADO(cedula) VALUES (NEW.cedula);
+    ELSEIF (NEW.cod_t_usuario = 5) THEN
+    	INSERT INTO DISTRIBUIDOR(cedula) VALUES (NEW.cedula);
+    END IF;
+END$$
+
+DELIMITER ;
+
+
+DELIMITER $$
+CREATE TRIGGER al_eliminar_usuario
+BEFORE UPDATE
+ON USUARIO FOR EACH ROW
+BEGIN
+	IF (OLD.cod_t_usuario = 2) THEN
+    	UPDATE CLIENTE SET OLD.cedula=NEW.cedula WHERE cedula=OLD.cedula;
+    ELSEIF (OLD.cod_t_usuario = 3) THEN
+    	UPDATE REGISTRADOR SET cod_registrador=NEW.cedula WHERE cod_registrador=OLD.cedula;
+    ELSEIF (OLD.cod_t_usuario = 4) THEN
+    	UPDATE EMPLEADO SET OLD.cedula=NEW.cedula WHERE cedula=OLD.cedula;
+    ELSEIF (OLD.cod_t_usuario = 5) THEN
+    	UPDATE DISTRIBUIDOR SET OLD.cedula=NEW.cedula WHERE cedula=OLD.cedula;
+    END IF;
+END$$
+
+DELIMITER ;
