@@ -11,7 +11,7 @@
     "build": "tsc -w",
     "dev": "nodemon build/index.js",
     "start": "node server.js",
-    "heroku-postbuild": "ng build --prod"
+    "postinstall": "ng build --aot --target=production"
   },
   "keywords": [],
   "author": "",
